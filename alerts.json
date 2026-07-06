@@ -1,1 +1,12 @@
-a
+{
+  "alerts": [
+    {
+      "zone": "pune",
+      "title": "Heavy rain alert issued for Pune city. Avoid low-lying flooded areas.",
+      "source": "Manual Emergency Update",
+      "link": "https://www.pmc.gov.in/",
+      "pubDate": "2026-07-06T16:00:00+05:30",
+      "priority": "high"
+    }
+  ]
+}
