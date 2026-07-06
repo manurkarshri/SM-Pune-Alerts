@@ -127,17 +127,17 @@
 </footer>
 
 <script>
-    // Fully restored working Boolean structures + integrated dynamic Marathi media strings
+    // Flat string mapping bypassing unsupportive middle parsers completely
     const zoneQueries = {
-        pune: "Pune AND (traffic OR landslide OR flood OR river OR rain OR 'red alert' OR 'अतिवृष्टी' OR 'पूर' OR 'ABP Majha' OR 'Zee 24 Taas' OR 'TV9 Marathi' OR 'Lokmat')",
-        pcmc: "(PCMC OR 'Pimpri Chinchwad' OR Nigdi OR Chinchwad) AND (traffic OR flood OR rain OR 'red alert' OR 'अतिवृष्टी' OR 'पूर' OR 'ABP Majha' OR 'Zee 24 Taas' OR 'TV9 Marathi')",
-        alandi: "Alandi AND (river OR flood OR overflow OR traffic OR Indrayani OR 'पूर' OR 'अतिवृष्टी')",
-        chakan: "Chakan AND (traffic OR accident OR blockage OR congestion OR 'जाम' OR 'अपघात')",
-        khed: "('Khed Shivapur' OR 'Katraj ghat') AND (landslide OR traffic OR accident OR 'दरड' OR 'जाम')",
-        talegaon: "Talegaon AND (traffic OR highway OR rain OR block OR 'जाम')",
-        ranjangaon: "Ranjangaon AND (MIDC OR highway OR traffic OR accident OR 'अपघात')",
-        saswad: "Saswad AND (ghat OR rain OR flood OR 'पूर' OR 'दिवे घाट')",
-        fursungi: "(Fursungi OR 'Uruli Devachi' OR Hadapsar) AND (traffic OR waterlogging OR 'जाम')"
+        pune: "Pune traffic landslide flood rain alert",
+        pcmc: "Pimpri Chinchwad traffic flood rain alert",
+        alandi: "Alandi Indrayani river flood overflow traffic",
+        chakan: "Chakan traffic accident blockage congestion",
+        khed: "Khed Shivapur Katraj ghat landslide traffic accident",
+        talegaon: "Talegaon traffic highway rain block",
+        ranjangaon: "Ranjangaon MIDC highway traffic accident",
+        saswad: "Saswad ghat rain flood",
+        fursungi: "Fursungi Uruli Devachi traffic waterlogging"
     };
 
     function initClock() {
@@ -164,28 +164,47 @@
         
         const currentQuery = zoneQueries[zoneKey] || zoneQueries['pune'];
         const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(currentQuery)}&hl=en-IN&gl=IN&ceid=IN:en`;
-        const stableApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=20`;
+        
+        // Direct clean XML bypass proxy route handling non-ASCII encoding safely
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`;
 
         try {
-            const res = await fetch(stableApiUrl);
+            const res = await fetch(proxyUrl);
             const data = await res.json();
             
+            // Raw string parsed locally straight inside browser DOM memory space
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+            const items = xmlDoc.getElementsByTagName("item");
+
             document.getElementById('loading').style.display = 'none';
 
-            if (!data.items || data.items.length === 0) {
+            if (!items || items.length === 0) {
                 document.getElementById("feed-container").innerHTML = "<p style='text-align:center; padding: 30px; font-size: 13px; color: #666;'>No active metrics logged over this interval.</p>";
                 return;
             }
 
-            // Clean chronological timestamp comparison sorting
-            const sortedItems = data.items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-            let html = "";
+            // Convert live XML NodeList collections safely into a flexible sorting array structure
+            let itemArray = [];
+            for (let i = 0; i < items.length; i++) {
+                itemArray.push({
+                    title: items[i].getElementsByTagName("title")[0]?.textContent || "",
+                    link: items[i].getElementsByTagName("link")[0]?.textContent || "#",
+                    pubDate: items[i].getElementsByTagName("pubDate")[0]?.textContent || ""
+                });
+            }
 
-            for (let i = 0; i < Math.min(sortedItems.length, 12); i++) {
-                const item = sortedItems[i];
+            // Clean chronological timestamp array sort execution
+            itemArray.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+            
+            let html = "";
+            const totalDisplayCount = Math.min(itemArray.length, 12);
+
+            for (let i = 0; i < totalDisplayCount; i++) {
+                const item = itemArray[i];
                 const parts = item.title.split(" - ");
                 const title = parts[0];
-                const source = parts[1] || "Regional Alert Control";
+                const source = parts[1] || "Alert Desk";
                 const timeStr = new Date(item.pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + " | " + new Date(item.pubDate).toLocaleDateString([], {month: 'short', day: 'numeric'});
 
                 html += `
