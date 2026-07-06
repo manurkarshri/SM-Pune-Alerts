@@ -1,0 +1,16 @@
+{
+  "name": "Pune Live Adversary Alerts",
+  "short_name": "PuneAlerts",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#b71c1c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1791/1791330.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
