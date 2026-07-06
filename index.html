@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pune Live Adversary Feed</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#b71c1c">
+    
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #212529; }
+        header { background-color: #b71c1c; color: white; padding: 15px; text-align: center; position: sticky; top: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100; }
+        .nav-tabs { display: flex; background: #e02424; justify-content: space-around; }
+        .tab-btn { background: none; border: none; color: white; padding: 12px; font-weight: bold; width: 50%; cursor: pointer; opacity: 0.7; font-size: 14px; }
+        .tab-btn.active { opacity: 1; border-bottom: 3px solid white; }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; box-sizing: border-box; }
+        .card { background: white; padding: 16px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); border-left: 5px solid #b71c1c; cursor: pointer; transition: transform 0.1s; }
+        .card:active { transform: scale(0.98); }
+        .card h3 { margin: 0 0 8px 0; font-size: 15px; line-height: 1.4; color: #111; }
+        .meta { font-size: 11px; color: #757575; font-weight: bold; margin-top: 8px; display: flex; justify-content: space-between; }
+        .helpline-item { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .call-btn { background: #2e7d32; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; text-decoration: none; font-size: 13px; }
+        .btn-install { background: #fff; color: #b71c1c; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; display: none; margin-top: 8px; cursor: pointer; }
+        #loading { text-align: center; padding: 40px; color: #555; font-size: 15px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 style="margin:0; font-size: 18px;">📍 Pune Emergency & Traffic Feed</h1>
+    <button id="installApp" class="btn-install">Install App</button>
+</header>
+
+<div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('feed')">LIVE ALERTS</button>
+    <button class="tab-btn" onclick="switchTab('helplines')">EMERGENCY DIAL</button>
+</div>
+
+<div class="container">
+    <div id="tab-feed">
+        <div id="loading">⚡ Scanning for active traffic, flood, and landslide reports...</div>
+        <div id="feed-container"></div>
+    </div>
+
+    <div id="tab-helplines" class="hidden">
+        <div class="helpline-item">
+            <div><strong>Pune Disaster Management Room</strong><br><small>Waterlogging & Collapses</small></div>
+            <a href="tel:02025501269" class="call-btn">📞 CALL</a>
+        </div>
+        <div class="helpline-item">
+            <div><strong>District Disaster Control (Toll-Free)</strong><br><small>Ghat/Landslide Response</small></div>
+            <a href="tel:1077" class="call-btn">📞 CALL</a>
+        </div>
+        <div class="helpline-item">
+            <div><strong>Mumbai-Pune Express Highway Control</strong><br><small>Expressway Traffic Blocks</small></div>
+            <a href="tel:9822498224" class="call-btn">📞 CALL</a>
+        </div>
+        <div class="helpline-item">
+            <div><strong>Pune Fire Department</strong><br><small>Tree falls / Emergency rescue</small></div>
+            <a href="tel:101" class="call-btn">📞 CALL</a>
+        </div>
+        <div class="helpline-item">
+            <div><strong>PMRDA Control Room</strong><br><small>Metropolitan Area Crisis</small></div>
+            <a href="tel:02067331111" class="call-btn">📞 CALL</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Targeted search matching local news reports covering PMC, PMRDA, Expressway, and IMD advisories
+    const query = "Pune AND (traffic OR landslide OR flood OR river OR rain OR 'red alert')";
+    const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-IN&gl=IN&ceid=IN:en`;
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`;
+
+    async function fetchAlerts() {
+        try {
+            const res = await fetch(proxyUrl);
+            const data = await res.json();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(data.contents, "text/xml");
+            const items = xml.getElementsByTagName("item");
+            
+            let html = "";
+            document.getElementById('loading').style.display = 'none';
+
+            if (items.length === 0) {
+                document.getElementById("feed-container").innerHTML = "<p style='text-align:center;'>No urgent incidents flagged in the last few hours.</p>";
+                return;
+            }
+
+            for (let i = 0; i < Math.min(items.length, 12); i++) {
+                const rawTitle = items[i].getElementsByTagName("title")[0].textContent;
+                const link = items[i].getElementsByTagName("link")[0].textContent;
+                const pubDate = items[i].getElementsByTagName("pubDate")[0].textContent;
+                
+                // Format headline split
+                const parts = rawTitle.split(" - ");
+                const title = parts[0];
+                const source = parts[1] || "Official / News Bulletin";
+                const timeStr = new Date(pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + " | " + new Date(pubDate).toLocaleDateString([], {month: 'short', day: 'numeric'});
+
+                html += `
+                    <div class="card" onclick="window.open('${link}', '_blank')">
+                        <h3>${title}</h3>
+                        <div class="meta">
+                            <span style="color:#b71c1c;">🌐 ${source}</span>
+                            <span>⏰ ${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById("feed-container").innerHTML = html;
+        } catch (e) {
+            document.getElementById("loading").innerText = "⚠️ Error loading live feeds. Tap to retry.";
+        }
+    }
+
+    function switchTab(type) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        if(type === 'feed') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('tab-feed').classList.remove('hidden');
+            document.getElementById('tab-helplines').classList.add('hidden');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('tab-feed').classList.add('hidden');
+            document.getElementById('tab-helplines').classList.remove('hidden');
+        }
+    }
+
+    // Register PWA Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    // Handle Install Prompt
+    let promptEvt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault(); promptEvt = e;
+        document.getElementById('installApp').style.display = 'inline-block';
+    });
+    document.getElementById('installApp').addEventListener('click', () => {
+        if (promptEvt) { promptEvt.prompt(); document.getElementById('installApp').style.display = 'none'; }
+    });
+
+    fetchAlerts();
+</script>
+</body>
+</html>
