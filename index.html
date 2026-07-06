@@ -127,16 +127,17 @@
 </footer>
 
 <script>
+    // Fully restored working Boolean structures + integrated dynamic Marathi media strings
     const zoneQueries = {
-        pune: "Pune AND (traffic OR landslide OR flood OR river OR rain OR alert)",
-        pcmc: "Pimpri OR Chinchwad AND (traffic OR flood OR rain OR alert)",
-        alandi: "Alandi AND (river OR flood OR overflow OR traffic)",
-        chakan: "Chakan AND (traffic OR accident OR blockage OR congestion)",
-        khed: "Khed Shivapur OR Katraj ghat AND (landslide OR traffic OR accident)",
-        talegaon: "Talegaon AND (traffic OR highway OR rain OR block)",
-        ranjangaon: "Ranjangaon AND (MIDC OR highway OR traffic)",
-        saswad: "Saswad AND (ghat OR rain OR flood)",
-        fursungi: "Fursungi OR Uruli Devachi AND (traffic OR waterlogging)"
+        pune: "Pune AND (traffic OR landslide OR flood OR river OR rain OR 'red alert' OR 'अतिवृष्टी' OR 'पूर' OR 'ABP Majha' OR 'Zee 24 Taas' OR 'TV9 Marathi' OR 'Lokmat')",
+        pcmc: "(PCMC OR 'Pimpri Chinchwad' OR Nigdi OR Chinchwad) AND (traffic OR flood OR rain OR 'red alert' OR 'अतिवृष्टी' OR 'पूर' OR 'ABP Majha' OR 'Zee 24 Taas' OR 'TV9 Marathi')",
+        alandi: "Alandi AND (river OR flood OR overflow OR traffic OR Indrayani OR 'पूर' OR 'अतिवृष्टी')",
+        chakan: "Chakan AND (traffic OR accident OR blockage OR congestion OR 'जाम' OR 'अपघात')",
+        khed: "('Khed Shivapur' OR 'Katraj ghat') AND (landslide OR traffic OR accident OR 'दरड' OR 'जाम')",
+        talegaon: "Talegaon AND (traffic OR highway OR rain OR block OR 'जाम')",
+        ranjangaon: "Ranjangaon AND (MIDC OR highway OR traffic OR accident OR 'अपघात')",
+        saswad: "Saswad AND (ghat OR rain OR flood OR 'पूर' OR 'दिवे घाट')",
+        fursungi: "(Fursungi OR 'Uruli Devachi' OR Hadapsar) AND (traffic OR waterlogging OR 'जाम')"
     };
 
     function initClock() {
@@ -163,7 +164,7 @@
         
         const currentQuery = zoneQueries[zoneKey] || zoneQueries['pune'];
         const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(currentQuery)}&hl=en-IN&gl=IN&ceid=IN:en`;
-        const stableApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=15`;
+        const stableApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=20`;
 
         try {
             const res = await fetch(stableApiUrl);
@@ -176,6 +177,7 @@
                 return;
             }
 
+            // Clean chronological timestamp comparison sorting
             const sortedItems = data.items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
             let html = "";
 
