@@ -3,108 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pune Live Adversary Feed</title>
+    <title>MH-12 Emergency Command Dashboard</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#b71c1c">
     
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #212529; }
-        header { background-color: #b71c1c; color: white; padding: 15px; text-align: center; position: sticky; top: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100; }
+        header { background-color: #b71c1c; color: white; padding: 15px; position: sticky; top: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .welcome-msg { font-size: 15px; font-weight: bold; margin-top: 5px; color: #ffcdd2; }
+        .live-clock { font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; }
+        
         .nav-tabs { display: flex; background: #e02424; justify-content: space-around; }
-        .tab-btn { background: none; border: none; color: white; padding: 12px; font-weight: bold; width: 50%; cursor: pointer; opacity: 0.7; font-size: 14px; }
+        .tab-btn { background: none; border: none; color: white; padding: 12px; font-weight: bold; width: 33.33%; cursor: pointer; opacity: 0.7; font-size: 13px; text-align: center; }
         .tab-btn.active { opacity: 1; border-bottom: 3px solid white; }
-        .container { padding: 15px; max-width: 600px; margin: 0 auto; box-sizing: border-box; }
-        .card { background: white; padding: 16px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); border-left: 5px solid #b71c1c; cursor: pointer; transition: transform 0.1s; }
-        .card:active { transform: scale(0.98); }
-        .card h3 { margin: 0 0 8px 0; font-size: 15px; line-height: 1.4; color: #111; }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; box-sizing: border-box; padding-bottom: 80px; }
+        
+        /* Profile Selector Layout */
+        .profile-box { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; }
+        .profile-row { display: flex; align-items: center; justify-content: space-between; }
+        .profile-row label { font-weight: bold; font-size: 14px; color: #333; }
+        .profile-row select { padding: 8px 12px; font-size: 14px; border-radius: 6px; border: 1px solid #ccc; background: white; width: 60%; font-weight: bold; color: #b71c1c; }
+        .edit-name-btn { background: #e02424; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; width: fit-content; align-self: flex-end;}
+
+        /* Overlay Setup for Onboarding Popup */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 200; }
+        .modal-card { background: white; padding: 25px; border-radius: 12px; width: 85%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .modal-card h2 { margin-top: 0; color: #b71c1c; font-size: 20px; }
+        .modal-card input, .modal-card select { width: 100%; padding: 10px; margin: 10px 0 20px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .modal-card button { width: 100%; background: #b71c1c; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 6px; font-size: 15px; cursor: pointer; }
+
+        .section-title { font-size: 14px; font-weight: bold; color: #555; margin: 15px 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px;}
+        .card { background: white; padding: 16px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); border-left: 5px solid #b71c1c; cursor: pointer; }
         .meta { font-size: 11px; color: #757575; font-weight: bold; margin-top: 8px; display: flex; justify-content: space-between; }
+        
+        .x-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .x-btn { background: #1da1f2; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: bold; text-align: center; font-size: 14px; }
+        
         .helpline-item { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .call-btn { background: #2e7d32; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; text-decoration: none; font-size: 13px; }
-        .btn-install { background: #fff; color: #b71c1c; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; display: none; margin-top: 8px; cursor: pointer; }
+        .btn-install { background: #fff; color: #b71c1c; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; display: none; cursor: pointer; }
         #loading { text-align: center; padding: 40px; color: #555; font-size: 15px; }
+        
+        footer { background: #212529; color: #aaa; text-align: center; padding: 15px; font-size: 12px; border-top: 3px solid #b71c1c; position: fixed; bottom: 0; width: 100%; box-sizing: border-box; z-index: 90; }
+        footer strong { color: #fff; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
+<div id="onboardModal" class="modal-overlay hidden">
+    <div class="modal-card">
+        <h2>Welcome to Pune Emergency Hub</h2>
+        <p style="font-size:13px; color:#555;">Please set up your profile preferences to configure custom regional notification vectors.</p>
+        
+        <label>Your Name:</label>
+        <input type="text" id="usernameInput" placeholder="Enter name...">
+        
+        <label>Primary Area of Interest:</label>
+        <select id="zoneInput">
+            <option value="pune">Pune City (PMC)</option>
+            <option value="pcmc">Pimpri-Chinchwad (PCMC)</option>
+            <option value="alandi">Alandi Area</option>
+            <option value="chakan">Chakan Industrial Cluster</option>
+            <option value="khed">Khed Shivapur / Ghats</option>
+            <option value="talegaon">Talegaon Dabhade</option>
+            <option value="ranjangaon">Ranjangaon Zone</option>
+            <option value="saswad">Saswad Region</option>
+            <option value="fursungi">Fursungi / Uruli</option>
+        </select>
+        
+        <button onclick="saveOnboardingProfile()">Access Live Feeds</button>
+    </div>
+</div>
+
 <header>
-    <h1 style="margin:0; font-size: 18px;">📍 Pune Emergency & Traffic Feed</h1>
-    <button id="installApp" class="btn-install">Install App</button>
+    <div class="header-top">
+        <h1 style="margin:0; font-size: 18px;">📍 Command Hub</h1>
+        <div class="live-clock" id="clockDisplay">Loading Clock...</div>
+    </div>
+    <div class="welcome-msg" id="welcomeUser">Welcome, User</div>
+    <button id="installApp" class="btn-install" style="margin-top: 8px;">Install App</button>
 </header>
 
 <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('feed')">LIVE ALERTS</button>
+    <button class="tab-btn active" onclick="switchTab('feed')">CHRONO FEEDS</button>
+    <button class="tab-btn" onclick="switchTab('twitter')">OFFICIAL X</button>
     <button class="tab-btn" onclick="switchTab('helplines')">EMERGENCY DIAL</button>
 </div>
 
 <div class="container">
+    
     <div id="tab-feed">
-        <div id="loading">⚡ Scanning for active traffic, flood, and landslide reports...</div>
+        <div class="profile-box">
+            <div class="profile-row">
+                <label for="zoneSelect">📍 Monitored Region:</label>
+                <select id="zoneSelect" onchange="updateTrackedZone()">
+                    <option value="pune">Pune City (PMC)</option>
+                    <option value="pcmc">Pimpri-Chinchwad (PCMC)</option>
+                    <option value="alandi">Alandi Area</option>
+                    <option value="chakan">Chakan Industrial Cluster</option>
+                    <option value="khed">Khed Shivapur / Ghats</option>
+                    <option value="talegaon">Talegaon Dabhade</option>
+                    <option value="ranjangaon">Ranjangaon Zone</option>
+                    <option value="saswad">Saswad Region</option>
+                    <option value="fursungi">Fursungi / Uruli</option>
+                </select>
+            </div>
+            <button class="edit-name-btn" onclick="triggerProfileReset()">Change Name / Settings</button>
+        </div>
+
+        <div class="section-title" id="feedTitle">⏱️ Processing Feed Updates...</div>
+        <div id="loading">⚡ Syncing local adversary databases...</div>
         <div id="feed-container"></div>
     </div>
 
+    <div id="tab-twitter" class="hidden">
+        <div class="section-title">🚨 Direct Public Dispatches</div>
+        <div class="x-grid">
+            <a href="https://x.com/PuneCityPolice" target="_blank" class="x-btn">📱 @PuneCityPolice (Traffic)</a>
+            <a href="https://x.com/PCMCPolice" target="_blank" class="x-btn" style="background: #111;">🚔 @PCMCPolice (Pimpri Traffic)</a>
+            <a href="https://x.com/PMCOfficial" target="_blank" class="x-btn" style="background:#0077b5;">🌊 @PMCOfficial (Civic Alerts)</a>
+            <a href="https://x.com/PCMCLLeets" target="_blank" class="x-btn" style="background:#e02424;">🏢 @PCMCindialert (PCMC Updates)</a>
+        </div>
+    </div>
+
     <div id="tab-helplines" class="hidden">
+        <div class="section-title">🚨 National Emergency Lines</div>
+        <div class="helpline-item">
+            <div><strong>National Emergency Number</strong><br><small>All-in-one immediate triage</small></div>
+            <a href="tel:112" class="call-btn">📞 CALL</a>
+        </div>
+        <div class="helpline-item">
+            <div><strong>Centralized Medical Ambulance</strong><br><small>Government Trauma Services</small></div>
+            <a href="tel:108" class="call-btn">📞 CALL</a>
+        </div>
+        <div class="helpline-item">
+            <div><strong>MSEDCL Electricity Emergency</strong><br><small>Power lines snap / Transformers</small></div>
+            <a href="tel:1912" class="call-btn">📞 CALL</a>
+        </div>
+        <div class="helpline-item">
+            <div><strong>Women's Helpline</strong><br><small>Safety & Distress Support</small></div>
+            <a href="tel:1091" class="call-btn">📞 CALL</a>
+        </div>
+
+        <div class="section-title">🏢 Pune Core Command Control</div>
         <div class="helpline-item">
             <div><strong>Pune Disaster Management Room</strong><br><small>Waterlogging & Collapses</small></div>
             <a href="tel:02025501269" class="call-btn">📞 CALL</a>
         </div>
         <div class="helpline-item">
-            <div><strong>District Disaster Control (Toll-Free)</strong><br><small>Ghat/Landslide Response</small></div>
+            <div><strong>PCMC Main Disaster Control</strong><br><small>Pimpri Chinchwad Emergencies</small></div>
+            <a href="tel:02067332222" class="call-btn">📞 CALL</a>
+        </div>
+        <div class="helpline-item">
+            <div><strong>District Disaster Control (Rural/Ghats)</strong><br><small>Landslides & Flash Floods</small></div>
             <a href="tel:1077" class="call-btn">📞 CALL</a>
         </div>
         <div class="helpline-item">
             <div><strong>Mumbai-Pune Express Highway Control</strong><br><small>Expressway Traffic Blocks</small></div>
             <a href="tel:9822498224" class="call-btn">📞 CALL</a>
         </div>
-        <div class="helpline-item">
-            <div><strong>Pune Fire Department</strong><br><small>Tree falls / Emergency rescue</small></div>
-            <a href="tel:101" class="call-btn">📞 CALL</a>
-        </div>
-        <div class="helpline-item">
-            <div><strong>PMRDA Control Room</strong><br><small>Metropolitan Area Crisis</small></div>
-            <a href="tel:02067331111" class="call-btn">📞 CALL</a>
-        </div>
     </div>
 </div>
 
-<script>
-    // 1. Using a dedicated, reliable RSS-to-JSON API service
-    const query = "Pune AND (traffic OR landslide OR flood OR river OR rain OR 'red alert')";
-    const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-IN&gl=IN&ceid=IN:en`;
-    const stableApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
+<footer>
+    Application Architecture & Developer Credits: <strong>Shriganesh Manurkar</strong>
+</footer>
 
-    async function fetchAlerts() {
+<script>
+    const zoneQueries = {
+        pune: "Pune AND (traffic OR landslide OR flood OR river OR rain OR 'red alert' OR 'अतिवृष्टी' OR 'पूर')",
+        pcmc: "(PCMC OR 'Pimpri Chinchwad' OR Nigdi OR Chinchwad OR Pimpri) AND (traffic OR flood OR rain OR 'अतिवृष्टी')",
+        alandi: "(Alandi OR Indrayani) AND (river OR flood OR overflow OR traffic OR 'पूर')",
+        chakan: "Chakan AND (traffic OR accident OR blockage OR congestion OR 'जाम')",
+        khed: "('Khed Shivapur' OR 'Katraj ghat' OR Nasrapur) AND (landslide OR traffic OR accident OR block)",
+        talegaon: "Talegaon AND (traffic OR highway OR rain OR block)",
+        ranjangaon: "Ranjangaon AND (MIDC OR highway OR traffic OR accident)",
+        saswad: "Saswad AND (ghat OR Diva OR rain OR flood)",
+        fursungi: "(Fursungi OR 'Uruli Devachi' OR Hadapsar) AND (traffic OR waterlogging OR fire)"
+    };
+
+    // 1. Hardware Ticking Clock Initialization
+    function initClock() {
+        setInterval(() => {
+            const now = new Date();
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+            const dateOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+            
+            document.getElementById('clockDisplay').innerText = 
+                `${now.toLocaleDateString('en-IN', dateOptions)} | ${now.toLocaleTimeString('en-IN', timeOptions)}`;
+        }, 1000);
+    }
+
+    // 2. Profile Execution Framework via LocalStorage
+    function runCoreOnboardingCheck() {
+        const storedName = localStorage.getItem('pune_user_name');
+        const storedZone = localStorage.getItem('pune_user_zone');
+
+        if (!storedName || !storedZone) {
+            document.getElementById('onboardModal').classList.remove('hidden');
+        } else {
+            document.getElementById('onboardModal').classList.add('hidden');
+            document.getElementById('welcomeUser').innerText = `Welcome, ${storedName}`;
+            
+            const selector = document.getElementById('zoneSelect');
+            selector.value = storedZone;
+            
+            const selectedText = selector.options[selector.selectedIndex].text;
+            document.getElementById('feedTitle').innerText = `⏱️ Latest Updates: ${selectedText}`;
+            
+            fetchAlerts(storedZone);
+        }
+    }
+
+    function saveOnboardingProfile() {
+        const nameInput = document.getElementById('usernameInput').value.trim();
+        const zoneInput = document.getElementById('zoneInput').value;
+
+        if (!nameInput) {
+            alert('Please fill out your identity string to initialize local dashboard variables.');
+            return;
+        }
+
+        localStorage.setItem('pune_user_name', nameInput);
+        localStorage.setItem('pune_user_zone', zoneInput);
+        runCoreOnboardingCheck();
+    }
+
+    function triggerProfileReset() {
+        const currentName = localStorage.getItem('pune_user_name') || "";
+        const currentZone = localStorage.getItem('pune_user_zone') || "pune";
+        
+        document.getElementById('usernameInput').value = currentName;
+        document.getElementById('zoneInput').value = currentZone;
+        document.getElementById('onboardModal').classList.remove('hidden');
+    }
+
+    function updateTrackedZone() {
+        const selectedZone = document.getElementById('zoneSelect').value;
+        localStorage.setItem('pune_user_zone', selectedZone);
+        
+        const selector = document.getElementById('zoneSelect');
+        const selectedText = selector.options[selector.selectedIndex].text;
+        document.getElementById('feedTitle').innerText = `⏱️ Latest Updates: ${selectedText}`;
+        
+        fetchAlerts(selectedZone);
+    }
+
+    // 3. Chronological Sorted Data Retrieval Action 
+    async function fetchAlerts(zoneKey) {
+        document.getElementById('feed-container').innerHTML = "";
+        document.getElementById('loading').style.display = 'block';
+        
+        const currentQuery = zoneQueries[zoneKey] || zoneQueries['pune'];
+        const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(currentQuery)}&hl=en-IN&gl=IN&ceid=IN:en`;
+        const stableApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&api_key=4xb0qjok7h4lpxu3l412b1ndgqbs6o4s0k3aenom`;
+
         try {
             const res = await fetch(stableApiUrl);
             const data = await res.json();
             
-            let html = "";
             document.getElementById('loading').style.display = 'none';
 
-            // Check if items exist in the returned JSON structure
             if (!data.items || data.items.length === 0) {
-                document.getElementById("feed-container").innerHTML = "<p style='text-align:center; padding: 20px;'>No urgent incidents flagged in the last few hours.</p>";
+                document.getElementById("feed-container").innerHTML = "<p style='text-align:center; padding: 20px;'>No urgent regional metrics logged over current scraping interval.</p>";
                 return;
             }
 
-            // Loop through up to 12 items
-            for (let i = 0; i < Math.min(data.items.length, 12); i++) {
-                const item = data.items[i];
-                const rawTitle = item.title;
-                const link = item.link;
-                const pubDate = item.pubDate;
-                
-                // Format headline split safely
-                const parts = rawTitle.split(" - ");
+            const sortedItems = data.items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+            let html = "";
+
+            for (let i = 0; i < Math.min(sortedItems.length, 15); i++) {
+                const item = sortedItems[i];
+                const parts = item.title.split(" - ");
                 const title = parts[0];
-                const source = parts[1] || "Official / News Bulletin";
-                
-                // Format time beautifully
-                const timeStr = new Date(pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + " | " + new Date(pubDate).toLocaleDateString([], {month: 'short', day: 'numeric'});
+                const source = parts[1] || "Regional Alert Control";
+                const timeStr = new Date(item.pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + " | " + new Date(item.pubDate).toLocaleDateString([], {month: 'short', day: 'numeric'});
 
                 html += `
-                    <div class="card" onclick="window.open('${link}', '_blank')">
-                        <h3>${title}</h3>
+                    <div class="card" onclick="window.open('${item.link}', '_blank')">
+                        <h3 style="margin:0 0 8px 0; font-size:15px; line-height:1.4;">${title}</h3>
                         <div class="meta">
                             <span style="color:#b71c1c;">🌐 ${source}</span>
                             <span>⏰ ${timeStr}</span>
@@ -114,29 +293,32 @@
             }
             document.getElementById("feed-container").innerHTML = html;
         } catch (e) {
-            document.getElementById("loading").innerHTML = "⚠️ Error loading live feeds.<br><br><button onclick='fetchAlerts()' style='padding:8px 15px; background:#b71c1c; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;'>Tap to Retry</button>";
+            document.getElementById("loading").innerHTML = "⚠️ Query process execution trace failed.<br><br><button onclick='updateTrackedZone()' style='padding:8px 15px; background:#b71c1c; color:white; border:none; border-radius:4px; font-weight:bold;'>Tap to Retry</button>";
         }
     }
 
     function switchTab(type) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-feed').classList.add('hidden');
+        document.getElementById('tab-twitter').classList.add('hidden');
+        document.getElementById('tab-helplines').classList.add('hidden');
+        
         if(type === 'feed') {
             document.querySelectorAll('.tab-btn')[0].classList.add('active');
             document.getElementById('tab-feed').classList.remove('hidden');
-            document.getElementById('tab-helplines').classList.add('hidden');
-        } else {
+        } else if(type === 'twitter') {
             document.querySelectorAll('.tab-btn')[1].classList.add('active');
-            document.getElementById('tab-feed').classList.add('hidden');
+            document.getElementById('tab-twitter').classList.remove('hidden');
+        } else {
+            document.querySelectorAll('.tab-btn')[2].classList.add('active');
             document.getElementById('tab-helplines').classList.remove('hidden');
         }
     }
 
-    // Register PWA Service Worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(() => {});
     }
 
-    // Handle Install Prompt
     let promptEvt;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault(); promptEvt = e;
@@ -146,7 +328,9 @@
         if (promptEvt) { promptEvt.prompt(); document.getElementById('installApp').style.display = 'none'; }
     });
 
-    fetchAlerts();
+    // Run Engine
+    initClock();
+    runCoreOnboardingCheck();
 </script>
 </body>
 </html>
