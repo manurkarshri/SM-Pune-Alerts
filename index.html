@@ -68,36 +68,38 @@
 </div>
 
 <script>
-    // Targeted search matching local news reports covering PMC, PMRDA, Expressway, and IMD advisories
+    // 1. Using a dedicated, reliable RSS-to-JSON API service
     const query = "Pune AND (traffic OR landslide OR flood OR river OR rain OR 'red alert')";
     const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-IN&gl=IN&ceid=IN:en`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`;
+    const stableApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
 
     async function fetchAlerts() {
         try {
-            const res = await fetch(proxyUrl);
+            const res = await fetch(stableApiUrl);
             const data = await res.json();
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(data.contents, "text/xml");
-            const items = xml.getElementsByTagName("item");
             
             let html = "";
             document.getElementById('loading').style.display = 'none';
 
-            if (items.length === 0) {
-                document.getElementById("feed-container").innerHTML = "<p style='text-align:center;'>No urgent incidents flagged in the last few hours.</p>";
+            // Check if items exist in the returned JSON structure
+            if (!data.items || data.items.length === 0) {
+                document.getElementById("feed-container").innerHTML = "<p style='text-align:center; padding: 20px;'>No urgent incidents flagged in the last few hours.</p>";
                 return;
             }
 
-            for (let i = 0; i < Math.min(items.length, 12); i++) {
-                const rawTitle = items[i].getElementsByTagName("title")[0].textContent;
-                const link = items[i].getElementsByTagName("link")[0].textContent;
-                const pubDate = items[i].getElementsByTagName("pubDate")[0].textContent;
+            // Loop through up to 12 items
+            for (let i = 0; i < Math.min(data.items.length, 12); i++) {
+                const item = data.items[i];
+                const rawTitle = item.title;
+                const link = item.link;
+                const pubDate = item.pubDate;
                 
-                // Format headline split
+                // Format headline split safely
                 const parts = rawTitle.split(" - ");
                 const title = parts[0];
                 const source = parts[1] || "Official / News Bulletin";
+                
+                // Format time beautifully
                 const timeStr = new Date(pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + " | " + new Date(pubDate).toLocaleDateString([], {month: 'short', day: 'numeric'});
 
                 html += `
@@ -112,7 +114,7 @@
             }
             document.getElementById("feed-container").innerHTML = html;
         } catch (e) {
-            document.getElementById("loading").innerText = "⚠️ Error loading live feeds. Tap to retry.";
+            document.getElementById("loading").innerHTML = "⚠️ Error loading live feeds.<br><br><button onclick='fetchAlerts()' style='padding:8px 15px; background:#b71c1c; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;'>Tap to Retry</button>";
         }
     }
 
